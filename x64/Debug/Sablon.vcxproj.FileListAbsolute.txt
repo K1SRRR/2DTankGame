@@ -1,0 +1,13 @@
+C:\Users\Bogdan\Downloads\RG Trougao Sablon (1)\Sablon\x64\Debug\glew32.dll
+C:\Users\Bogdan\Downloads\RG Trougao Sablon (1)\Sablon\x64\Debug\Sablon.exe
+C:\Users\srdja\Desktop\sablonZaRadAutomobil\Sablon\x64\Debug\glew32.dll
+C:\Users\srdja\Desktop\sablonZaRadAutomobil\Sablon\x64\Debug\Sablon.exe
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\Sablon.vcxproj.CopyComplete
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\glew32.dll
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\Sablon.exe
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\freetyped.dll
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\zlibd1.dll
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\bz2d.dll
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\libpng16d.dll
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\brotlidec.dll
+C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\brotlicommon.dll
