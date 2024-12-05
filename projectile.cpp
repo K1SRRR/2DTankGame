@@ -66,7 +66,6 @@ void Projectile::initialize() {
 void Projectile::update(float deltaTime, Map& map) {
     if (!active) return;
 
-    // Move projectile
     position.x += cos(glm::radians(angle)) * speed * deltaTime;
     position.y += sin(glm::radians(angle)) * speed * deltaTime;
 

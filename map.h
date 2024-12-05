@@ -20,7 +20,7 @@ public:
 
     const int MATRIX_WIDTH = 15;
     const int MATRIX_HEIGHT = 15;
-    const float TILE_SIZE = 2.0f / MATRIX_WIDTH;  // Normalize to screen coordinates
+    const float TILE_SIZE = 2.0f / MATRIX_WIDTH;
 
     Map();
     void initializeMap();
@@ -29,9 +29,9 @@ public:
     void setTile(int x, int y, TileType type);
     TileType getTile(int x, int y);
     float clamp(float value, float min, float max);
-    void placeBush(int x, int y);  // Postavljanje žbunja
-    void removeBush(int x, int y);  // Uklanjanje žbunja
-    bool hasBush(int x, int y) const;  // Provera da li postoji žbunje
+    void placeBush(int x, int y);
+    void removeBush(int x, int y);
+    bool hasBush(int x, int y) const;
 };
 
 #endif

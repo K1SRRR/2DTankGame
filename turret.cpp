@@ -29,7 +29,6 @@ const char* fragmentTurretShaderSource = R"(
         }
     )";
 
-// Konstruktor
 Turret::Turret(glm::vec2 initPosition, const char* textureSourceFile)
     : position(initPosition), turretAngle(0.0f), texture(0)
 {
@@ -76,7 +75,6 @@ Turret::Turret(glm::vec2 initPosition, const char* textureSourceFile)
     glUseProgram(0);
 }
 
-// Renderovanje kupole
 void Turret::render() {
     glm::mat4 model = getModelMatrix();
 
@@ -95,7 +93,6 @@ void Turret::render() {
     glUseProgram(0);
 }
 
-// Usmeravanje kupole prema mišu
 void Turret::aimAtMouse(float mouseX, float mouseY, int windowWidth, int windowHeight) {
     float normalizedX = (mouseX / windowWidth) * 2.0f - 1.0f;
     float normalizedY = 1.0f - (mouseY / windowHeight) * 2.0f;
@@ -103,15 +100,15 @@ void Turret::aimAtMouse(float mouseX, float mouseY, int windowWidth, int windowH
     turretAngle = glm::degrees(atan2(normalizedY - position.y, normalizedX - position.x)) - 90.0f;
 }
 
-// Matrica modela
 glm::mat4 Turret::getModelMatrix() const {
+    //std::cout << "positionX: " << position.x << std::endl;
+    //std::cout << "positionY: " << position.y << std::endl;
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position, 0.0f));
     model = glm::rotate(model, glm::radians(turretAngle), glm::vec3(0.0f, 0.0f, 1.0f));
     return model;
 }
 
-// Uništavanje resursa
 Turret::~Turret() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);

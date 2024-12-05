@@ -50,16 +50,13 @@ PauseMenu::PauseMenu(unsigned int windowWidth1, unsigned int windowHeight1, Text
     resumeButton.height = 50;
     resumeButton.isHovered = false;
 
-    // Generisanje VAO i VBO za overlay
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
-    // Podešavanje VAO
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(overlayVertices), overlayVertices, GL_STATIC_DRAW);
 
-    // Definisanje vertex atributa (pozicija i teksturne koordinate)
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -94,7 +91,6 @@ void PauseMenu::renderOverlay(unsigned int textRenderingShader, double mouseX, d
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-    // Renderovanje quit dugmeta
     renderButtons(textRenderingShader);
     glBindVertexArray(0);
     glUseProgram(0);
@@ -106,7 +102,6 @@ void PauseMenu::renderButtons(unsigned int textRenderingShader) {
     float resumeNormalizedX = 2.0f * (resumeButton.x / windowWidth);
     float resumeNormalizedY = 2.0f * (resumeButton.y / windowHeight);
 
-    //textRenderer.renderText(textShader, "QUIT", 0.0f, 0.0f, 1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
     textRenderer.renderText(textRenderingShader, "QUIT", quitNormalizedX, quitNormalizedY, 1.0f,
         quitButton.isHovered ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(1.0f, 0.0f, 0.0f));
     textRenderer.renderText(textRenderingShader, "RESUME", resumeNormalizedX, resumeNormalizedY, 1.0f,
@@ -115,17 +110,12 @@ void PauseMenu::renderButtons(unsigned int textRenderingShader) {
 
 bool PauseMenu::handleQuitClick(double mouseX, double mouseY) {
     if (!isPaused) return false;
-
-    // Provera da li je miš iznad quit dugmeta
     quitButton.isHovered = quitButton.isMouseOver(mouseX, mouseY);
-
     return quitButton.isHovered;
 }
 bool PauseMenu::handleResumeClick(double mouseX, double mouseY) {
     if (!isPaused) return false;
-
     resumeButton.isHovered = resumeButton.isMouseOver(mouseX, mouseY);
-
     return resumeButton.isHovered;
 }
 

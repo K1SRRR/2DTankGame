@@ -13,7 +13,6 @@ const char* vertexCrosshairShaderSource = R"(
         }
     )";
 
-// Fragment shader source
 const char* fragmentCrosshairShaderSource = R"(
         #version 330 core
         out vec4 FragColor;
@@ -68,7 +67,6 @@ void Crosshair::render(const Tank& tank, float currentTime) {
     unsigned int ugreenLoc = glGetUniformLocation(unifiedShader, "Ugreen");
     unsigned int modelLoc = glGetUniformLocation(unifiedShader, "modelMat");
 
-    // Create translation matrix to move crosshair to (x, y)
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(x, y, 0.0f));
 
@@ -76,28 +74,25 @@ void Crosshair::render(const Tank& tank, float currentTime) {
     glUseProgram(unifiedShader);
 
     if (canShoot) {
-        // Green when can shoot
+        // Zelena kad moze
         glUniform1f(uredLoc, 0.0f);
         glUniform1f(ugreenLoc, 1.0f);
     }
     else {
-        // Red when cannot shoot
+        // Crvena kad ne moze da puca
         glUniform1f(uredLoc, 1.0f);
         glUniform1f(ugreenLoc, 0.0f);
     }
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]); //Ovo dobija adresu tog prvog člana, tj. početnu adresu celokupnog niza 4x4 elemenata.
-    //The first argument should be familiar by now which is the uniform's location. 
-    //The second argument tells OpenGL how many matrices we'd like to send, which is 1. 
-    //The third argument asks us if we want to transpose our matrix, that is to swap the columns and rows.
 
     glBindVertexArray(VAO);
     glLineWidth(5.0f);
-    glDrawArrays(GL_LINES, 0, 4);  // Draw 2 lines (X shape)
+    glDrawArrays(GL_LINES, 0, 4);  // X oblik
     glBindVertexArray(0);
     glUseProgram(0);
 }
 
-void Crosshair::setPosition(float nx, float ny) {
+void Crosshair::setPosition(float nx, float ny) { //vec normalizone u mainu
     x = nx;
     y = ny;
 }

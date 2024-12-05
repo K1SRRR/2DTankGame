@@ -50,7 +50,7 @@ Tank::Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float i
     glBindVertexArray(VAO);
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
@@ -71,7 +71,7 @@ Tank::Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float i
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(unifiedShader);
     unsigned uTexLoc = glGetUniformLocation(unifiedShader, "uTex");
-    glUniform1i(uTexLoc, 0); // Indeks teksturne jedinice (sa koje teksture ce se citati boje)
+    glUniform1i(uTexLoc, 0);
     glUseProgram(0);
 }
 
@@ -79,11 +79,9 @@ void Tank::render() {
     if (isDestroyed) return;
 
     unsigned int stride = (2 + 2) * sizeof(float);
-    // Kreiraj matricu modela koja uključuje rotaciju celog tenka
     glm::mat4 model = getModelMatrix();
 
     glUseProgram(unifiedShader);
-    // Ažuriraj uniformu za poziciju
     unsigned uModelLoc = glGetUniformLocation(unifiedShader, "uModel");
     glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, &model[0][0]);
 
@@ -98,13 +96,13 @@ void Tank::render() {
     glUseProgram(0);
 }
 
-// Kretanje napred
 void Tank::moveForward(float deltaTime, Map& map) {
     glm::vec2 nextPosition = position;
     nextPosition.x += cos(glm::radians(bodyAngle)) * speed * deltaTime;
     nextPosition.y += sin(glm::radians(bodyAngle)) * speed * deltaTime;
-    std::cout << "nextPosition.x" << nextPosition.x << std::endl;
-    std::cout << "nextPosition.y" << nextPosition.y << std::endl;
+    //std::cout << "nextPosition.x" << nextPosition.x << std::endl;
+    //std::cout << "nextPosition.y" << nextPosition.y << std::endl;
+    
     //koordinate koje predstavljaju položaj tenka na koordinatnom sistemu mape
     int mapX = static_cast<int>(position.x * map.MATRIX_WIDTH / 2.0f + map.MATRIX_WIDTH / 2.0f);
     int mapY = static_cast<int>(position.y * map.MATRIX_HEIGHT / 2.0f + map.MATRIX_HEIGHT / 2.0f);
@@ -120,11 +118,11 @@ void Tank::moveForward(float deltaTime, Map& map) {
     }
 }
 
-// Kretanje unazad
 void Tank::moveBackward(float deltaTime, Map& map) {
     glm::vec2 nextPosition = position;
     nextPosition.x -= cos(glm::radians(bodyAngle)) * speed * deltaTime;
     nextPosition.y -= sin(glm::radians(bodyAngle)) * speed * deltaTime;
+
     //koordinate koje predstavljaju položaj tenka na koordinatnom sistemu mape
     int mapX = static_cast<int>(position.x * map.MATRIX_WIDTH / 2.0f + map.MATRIX_WIDTH / 2.0f);
     int mapY = static_cast<int>(position.y * map.MATRIX_HEIGHT / 2.0f + map.MATRIX_HEIGHT / 2.0f);
@@ -140,19 +138,15 @@ void Tank::moveBackward(float deltaTime, Map& map) {
     }
 }
 
-// Rotacija tela levo
 void Tank::rotateBodyLeft(float deltaTime) {
     bodyAngle += rotationSpeed * deltaTime;
 }
 
-// Rotacija tela desno
 void Tank::rotateBodyRight(float deltaTime) {
     bodyAngle -= rotationSpeed * deltaTime;
 }
 
-// Okretanje kupole prema mišu
 void Tank::aimTurret(float mouseX, float mouseY, int windowWidth, int windowHeight) {
-    // Pretvaranje miša u koordinatni prostor
     float normalizedX = (mouseX / windowWidth) * 2.0f - 1.0f;
     float normalizedY = 1.0f - (mouseY / windowHeight) * 2.0f;
 
@@ -160,14 +154,10 @@ void Tank::aimTurret(float mouseX, float mouseY, int windowWidth, int windowHeig
     turretAngle = glm::degrees(atan2(normalizedY - position.y, normalizedX - position.x)) - 90.0f;
 }
 
-// Matrica modela za rendering
 glm::mat4 Tank::getModelMatrix() const {
     glm::mat4 model = glm::mat4(1.0f);
-    // Translacija tenka do (0,0) da rotira oko svog centra
-    model = glm::translate(model, glm::vec3(position, 0.0f));
-
-    // Rotacija tela tenka (oko tačke (0,0))
-    model = glm::rotate(model, glm::radians(bodyAngle), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::translate(model, glm::vec3(position, 0.0f)); // Translacija tenka do (0,0) da rotira oko svog centra
+    model = glm::rotate(model, glm::radians(bodyAngle), glm::vec3(0.0f, 0.0f, 1.0f)); // Rotacija tela tenka (oko tačke (0,0))
     return model;
 }
 
@@ -179,12 +169,10 @@ bool Tank::canShoot(float currentTime) const {
 
 void Tank::shoot(float currentTime, ISoundEngine& SoundEngine) {
     if (canShoot(currentTime)) {
-        // Calculate projectile start position (from turret)
-        glm::vec2 projectileStart = position;
+        glm::vec2 projectileStart = position; // startna pozicija projektila u odnosu na kupolu
         projectileStart.x += cos(glm::radians(turretAngle+90.0f)) * 0.2f;
         projectileStart.y += sin(glm::radians(turretAngle+90.0f)) * 0.2f;
 
-        // Create new projectile
         Projectile* newProjectile = new Projectile(projectileStart, turretAngle, projectileSpeed);
         projectiles.push_back(newProjectile);
 

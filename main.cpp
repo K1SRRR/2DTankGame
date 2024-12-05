@@ -68,15 +68,12 @@ int main(void)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    //Shader shader("textShader.vert", "textShader.frag");
     unsigned int textRenderingShader = createShaderFromFile("textShader.vert", "textShader.frag");
-    //Shader pauseMenuShader("pauseMenu.vert", "pauseMenu.frag
-    //unsigned int pauseMenuShader = createShaderFromFile("pauseMenu.vert", "pauseMenu.frag");
     TextRenderer mainTextRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
     mainTextRenderer.init("BRLNSR.TTF", 48);
     TextRenderer pauseMenuTextRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
     pauseMenuTextRenderer.init("BRLNSR.TTF", 48);
-    //Background background;
+
     Tank tank(glm::vec2(0.0f, -0.7f), 0.0f, 0.3f, 60.0f, "tank.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret(glm::vec2(0.0f, 0.0f), "turret.png");
     tank.setTurret(&turret);
@@ -157,7 +154,6 @@ int main(void)
                 projectile->update(deltaTime, map);
                 CheckProjectileTankHit(*SoundEngine, tank2, *projectile);
                 CheckProjectileTankHit(*SoundEngine, tank3, *projectile);
-
                 projectile->render();
             }
             for (auto it = tank.projectiles.begin(); it != tank.projectiles.end();) {
@@ -202,9 +198,7 @@ int main(void)
 
 void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile) {
     float distance = glm::distance(projectile.getPosition(), tank.position); //euklidska distanca izmedju projektila i tenka
-    if (distance < 0.1f) {  // Adjust collision radius as needed
-        //tank.position = glm::vec2(-0.7f, -0.7f);
-        //turret2.position = glm::vec2(-0.7f, -0.7f);
+    if (distance < 0.1f) {
         tank.isDestroyed = true;
         projectile.hitTarget = true;
         projectile.active = false;

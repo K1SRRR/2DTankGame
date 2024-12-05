@@ -1,8 +1,8 @@
 #ifndef TANK_H
 #define TANK_H
 
-#include <glm/glm.hpp> // Za pozicije, rotaciju i transformacije
-#include <glm/gtc/matrix_transform.hpp> // Za matrice transformacija
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <GL/glew.h>
 #include "turret.h"
 #include "map.h"
@@ -15,7 +15,6 @@ const float SHOOT_COOLDOWN = 2.0f;
 
 class Tank {
 public:
-    // Osnovni atributi tenka
     glm::vec2 position;     // Pozicija tenka (x, y)
     float bodyAngle;        // Ugao rotacije tela tenka
     float turretAngle;      // Ugao rotacije kupole
@@ -33,12 +32,9 @@ public:
     bool isDestroyed = false; 
     ISound* drivingSound = nullptr;
 
-    // Konstruktor
     Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float initRotationSpeed, const char* textureSourceFile);
 
     void render();
-
-    // Funkcije
     void moveForward(float deltaTime, Map& map);
     void moveBackward(float deltaTime, Map& map);
     void rotateBodyLeft(float deltaTime);
@@ -50,7 +46,6 @@ public:
     void setTurret(Turret* tankTurret);
     Turret getTurret();
 
-    // Matrica modela za rendering
     glm::mat4 getModelMatrix() const;
 };
 

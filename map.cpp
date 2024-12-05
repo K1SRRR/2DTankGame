@@ -9,8 +9,6 @@ const char* vertexMapShaderSource = R"(
         layout (location = 1) in vec2 aTexCoord;
 
         uniform mat4 uModel;
-        //uniform mat4 uProjection;
-
         out vec2 TexCoord;
 
         void main() {
@@ -19,7 +17,6 @@ const char* vertexMapShaderSource = R"(
         }
     )";
 
-// Fragment shader source
 const char* fragmentMapShaderSource = R"(
         #version 330 core
         out vec4 FragColor;
@@ -32,10 +29,9 @@ const char* fragmentMapShaderSource = R"(
     )";
 
 Map::Map() {
-    // Initialize map matrix
     mapMatrix.resize(MATRIX_HEIGHT, std::vector<TileType>(MATRIX_WIDTH, TileType::GRASS));
 
-    // Default walls around edges
+    // Zidovi po cosku po defaultu
     for (int x = 0; x < MATRIX_WIDTH; x++) {
         mapMatrix[0][x] = TileType::WALL;
         mapMatrix[MATRIX_HEIGHT - 1][x] = TileType::WALL;
@@ -44,11 +40,8 @@ Map::Map() {
         mapMatrix[y][0] = TileType::WALL;
         mapMatrix[y][MATRIX_WIDTH - 1] = TileType::WALL;
     }
-
-    // Shader setup (similar to previous examples)
     shader = createShader(vertexMapShaderSource, fragmentMapShaderSource);
 
-    // Setup VAO and VBO for rendering tiles
     float vertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f,  // Bottom-left
         1.0f, 0.0f, 1.0f, 0.0f,  // Bottom-right
@@ -154,12 +147,11 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
     int tileX = static_cast<int>(std::floor(normalizedX / TILE_SIZE));
     int tileY = static_cast<int>(std::floor(normalizedY / TILE_SIZE));
 
-    // Expanded bounds check
+    // Outside map boundaries
     if (tileX < 0 || tileX >= MATRIX_WIDTH || tileY < 0 || tileY >= MATRIX_HEIGHT) {
-        return true;  // Outside map boundaries
+        return true;  
     }
 
-    // Check a wider area around the player
     for (int dy = -1; dy <= 1; dy++) {
         for (int dx = -1; dx <= 1; dx++) {
             int checkX = tileX + dx;
@@ -169,9 +161,7 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
             if (checkX < 0 || checkX >= MATRIX_WIDTH || checkY < 0 || checkY >= MATRIX_HEIGHT)
                 continue;
 
-            // If it's a wall tile, perform detailed collision
             if (mapMatrix[checkY][checkX] == TileType::WALL) {
-                // Calculate tile world position (center of the tile)
                 glm::vec2 tileCenter((checkX * TILE_SIZE) - 1.0f + (TILE_SIZE / 2.0f),
                                      (checkY * TILE_SIZE) - 1.0f + (TILE_SIZE / 2.0f));
 
@@ -188,7 +178,7 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
                 float distanceY = position.y - closestY;
 
                 // Check if the distance is less than the circle's radius
-                float distanceSquared = sqrt((distanceX * distanceX) + (distanceY * distanceY)); //euklidska distanca
+                float distanceSquared = sqrt((distanceX * distanceX) + (distanceY * distanceY)); //euclid distance
                 if (distanceSquared < radius) {
                     return true;  // Collision detected
                 }
@@ -196,7 +186,7 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
         }
     }
 
-    return false;  // No collision
+    return false; // No collision
 }
 float Map::clamp(float value, float min, float max) {
     return std::max(min, std::min(value, max));
@@ -212,11 +202,9 @@ TileType Map::getTile(int x, int y) {
     if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
         return mapMatrix[y][x];
     }
-    return TileType::WALL;  // Default to wall for out-of-bounds
+    return TileType::WALL;
 }
 
-
-// Dodajte nove metode:
 void Map::placeBush(int x, int y) {
     if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
         // Postavljamo žbunje samo na travu
