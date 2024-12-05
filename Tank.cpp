@@ -8,8 +8,8 @@
 #include "globalFunctions.h"
 
 // Konstruktor
-Tank::Tank(glm::vec2 initPosition, float initSpeed, float initRotationSpeed, const char* textureSourceFile)
-    : position(initPosition), bodyAngle(90.0f), turretAngle(0.0f),
+Tank::Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float initRotationSpeed, const char* textureSourceFile)
+    : position(initPosition), bodyAngle(initBodyAngle+90.0f), turretAngle(0.0f),
     speed(initSpeed), rotationSpeed(initRotationSpeed), texture(0) 
 {
     const char* vertexShaderSource = R"(
@@ -17,7 +17,6 @@ Tank::Tank(glm::vec2 initPosition, float initSpeed, float initRotationSpeed, con
         layout(location = 0) in vec2 inPos;
         layout(location = 1) in vec2 inTex;
         out vec2 chTex;
-        //uniform vec2 uPos;
         uniform mat4 uModel;
         void main()
         {
@@ -74,7 +73,6 @@ Tank::Tank(glm::vec2 initPosition, float initSpeed, float initRotationSpeed, con
     unsigned uTexLoc = glGetUniformLocation(unifiedShader, "uTex");
     glUniform1i(uTexLoc, 0); // Indeks teksturne jedinice (sa koje teksture ce se citati boje)
     glUseProgram(0);
-
 }
 
 void Tank::render() {
@@ -88,9 +86,6 @@ void Tank::render() {
     // Ažuriraj uniformu za poziciju
     unsigned uModelLoc = glGetUniformLocation(unifiedShader, "uModel");
     glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, &model[0][0]);
-
-    //unsigned uPosLoc = glGetUniformLocation(unifiedShader, "uPos");
-    //glUniform2f(uPosLoc, position.x, position.y); // Koristi trenutnu poziciju tenka
 
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
@@ -108,13 +103,16 @@ void Tank::moveForward(float deltaTime, Map& map) {
     glm::vec2 nextPosition = position;
     nextPosition.x += cos(glm::radians(bodyAngle)) * speed * deltaTime;
     nextPosition.y += sin(glm::radians(bodyAngle)) * speed * deltaTime;
+    std::cout << "nextPosition.x" << nextPosition.x << std::endl;
+    std::cout << "nextPosition.y" << nextPosition.y << std::endl;
+    //koordinate koje predstavljaju položaj tenka na koordinatnom sistemu mape
     int mapX = static_cast<int>(position.x * map.MATRIX_WIDTH / 2.0f + map.MATRIX_WIDTH / 2.0f);
     int mapY = static_cast<int>(position.y * map.MATRIX_HEIGHT / 2.0f + map.MATRIX_HEIGHT / 2.0f);
 
     if (map.hasBush(mapX, mapY)) {
         map.removeBush(mapX, mapY);
     }
-    if (!map.checkCollision(nextPosition, 0.05f)) {
+    if (!map.checkCollision(nextPosition, 0.06f)) {
         position = nextPosition;
         if (turret) {
             turret->position = position;
@@ -127,13 +125,14 @@ void Tank::moveBackward(float deltaTime, Map& map) {
     glm::vec2 nextPosition = position;
     nextPosition.x -= cos(glm::radians(bodyAngle)) * speed * deltaTime;
     nextPosition.y -= sin(glm::radians(bodyAngle)) * speed * deltaTime;
+    //koordinate koje predstavljaju položaj tenka na koordinatnom sistemu mape
     int mapX = static_cast<int>(position.x * map.MATRIX_WIDTH / 2.0f + map.MATRIX_WIDTH / 2.0f);
     int mapY = static_cast<int>(position.y * map.MATRIX_HEIGHT / 2.0f + map.MATRIX_HEIGHT / 2.0f);
 
     if (map.hasBush(mapX, mapY)) {
         map.removeBush(mapX, mapY);
     }
-    if (!map.checkCollision(nextPosition, 0.05f)) {
+    if (!map.checkCollision(nextPosition, 0.06f)) {
         position = nextPosition;
         if (turret) {
             turret->position = position;
@@ -142,12 +141,12 @@ void Tank::moveBackward(float deltaTime, Map& map) {
 }
 
 // Rotacija tela levo
-void Tank::rotateBodyLeft(float deltaTime, Map& map) {
+void Tank::rotateBodyLeft(float deltaTime) {
     bodyAngle += rotationSpeed * deltaTime;
 }
 
 // Rotacija tela desno
-void Tank::rotateBodyRight(float deltaTime, Map& map) {
+void Tank::rotateBodyRight(float deltaTime) {
     bodyAngle -= rotationSpeed * deltaTime;
 }
 
@@ -157,7 +156,7 @@ void Tank::aimTurret(float mouseX, float mouseY, int windowWidth, int windowHeig
     float normalizedX = (mouseX / windowWidth) * 2.0f - 1.0f;
     float normalizedY = 1.0f - (mouseY / windowHeight) * 2.0f;
 
-    // Izračunavanje ugla prema poziciji miša
+    // Izračunavanje ugla prema poziciji miša (ugao između tačke (x, y) i pozitivne X ose u koordinatnom sistemu)
     turretAngle = glm::degrees(atan2(normalizedY - position.y, normalizedX - position.x)) - 90.0f;
 }
 
@@ -178,7 +177,7 @@ bool Tank::canShoot(float currentTime) const {
     return canShoot;
 }
 
-void Tank::shoot(float currentTime) {
+void Tank::shoot(float currentTime, ISoundEngine& SoundEngine) {
     if (canShoot(currentTime)) {
         // Calculate projectile start position (from turret)
         glm::vec2 projectileStart = position;
@@ -191,6 +190,8 @@ void Tank::shoot(float currentTime) {
 
         ammunition--;
         lastShotTime = currentTime;
+        SoundEngine.play2D("tankFire.mp3", false);
+        SoundEngine.play2D("reload.mp3", false);
     }
 }
 
@@ -202,11 +203,4 @@ void Tank::setTurret(Turret* tankTurret) {
 }
 Turret Tank::getTurret() {
     return *turret;
-}
-
-void Tank::resetPosition() {
-    position = glm::vec2(0.0f, 0.7f);  // Početna pozicija
-    bodyAngle = 90.0f;  // Inicijalni ugao
-    turretAngle = 0.0f;  // Reset uglа kupole
-    ammunition = 10;     // Resetovanje municije
 }

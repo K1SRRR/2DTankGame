@@ -22,6 +22,8 @@
 
 #include <thread>
 #include <chrono>
+#include <irrKlang.h>
+using namespace irrklang;
 
 const unsigned int WINDOW_WIDTH = 900;
 const unsigned int WINDOW_HEIGHT= 900;
@@ -29,10 +31,10 @@ const float TARGET_FPS = 120.0f;
 const float FRAME_TIME = 1.0f / TARGET_FPS;
 const float GAME_TIME = 20.0f;
 
-void processInput(GLFWwindow* window, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map, 
+void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map,
                   PauseMenu& pauseMenu, float deltaTime);
 void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& textRenderer, float elapsedGameTime, bool isGameWon);
-void CheckProjectileTankHit(Tank& tank, Projectile& projectile);
+void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile);
 
 int main(void)
 {
@@ -75,13 +77,13 @@ int main(void)
     TextRenderer pauseMenuTextRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
     pauseMenuTextRenderer.init("BRLNSR.TTF", 48);
     //Background background;
-    Tank tank(glm::vec2(0.0f, -0.7f), 0.3f, 60.0f, "tank.png"); // Početna pozicija, brzina, rotaciona brzina
+    Tank tank(glm::vec2(0.0f, -0.7f), 0.0f, 0.3f, 60.0f, "tank.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret(glm::vec2(0.0f, 0.0f), "turret.png");
     tank.setTurret(&turret);
-    Tank tank2(glm::vec2(-0.7f, 0.7f), 0.001f, 0.2f, "tank2.png"); // Početna pozicija, brzina, rotaciona brzina
+    Tank tank2(glm::vec2(-0.7f, 0.7f), 0.0f, 0.001f, 0.2f, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret2(glm::vec2(0.0f, 0.0f), "turret2.png");
     tank2.setTurret(&turret2);
-    Tank tank3(glm::vec2(0.7f, 0.7f), 0.001f, 0.2f, "tank2.png"); // Početna pozicija, brzina, rotaciona brzina
+    Tank tank3(glm::vec2(0.7f, 0.7f), 0.0f, 0.001f, 0.2f, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret3(glm::vec2(0.0f, 0.0f), "turret2.png");
     tank3.setTurret(&turret3);
 
@@ -92,11 +94,11 @@ int main(void)
     map.setTile(7, 4, TileType::WALL);
     map.setTile(8, 4, TileType::WALL);
     map.setTile(9, 4, TileType::WALL);
-    map.setTile(5, 11, TileType::WALL);
-    map.setTile(6, 11, TileType::WALL);
-    map.setTile(7, 11, TileType::WALL);
-    map.setTile(8, 11, TileType::WALL);
-    map.setTile(9, 11, TileType::WALL);
+    map.setTile(5, 10, TileType::WALL);
+    map.setTile(6, 10, TileType::WALL);
+    map.setTile(7, 10, TileType::WALL);
+    map.setTile(8, 10, TileType::WALL);
+    map.setTile(9, 10, TileType::WALL);
     map.placeBush(4, 5);
     map.placeBush(5, 5);
     map.placeBush(6, 5);
@@ -104,42 +106,36 @@ int main(void)
     map.placeBush(8, 5);
     map.placeBush(9, 5);
     map.placeBush(10, 5);
-    map.placeBush(4, 10);
-    map.placeBush(5, 10);
-    map.placeBush(6, 10);
-    map.placeBush(7, 10);
-    map.placeBush(8, 10);
-    map.placeBush(9, 10);
-    map.placeBush(10, 10);
+    map.placeBush(4, 9);
+    map.placeBush(5, 9);
+    map.placeBush(6, 9);
+    map.placeBush(7, 9);
+    map.placeBush(8, 9);
+    map.placeBush(9, 9);
+    map.placeBush(10, 9);
     PauseMenu pauseMenu(WINDOW_WIDTH, WINDOW_HEIGHT, pauseMenuTextRenderer);
+    ISoundEngine* SoundEngine = createIrrKlangDevice(); 
+    SoundEngine->setSoundVolume(0.15f);
+    SoundEngine->play2D("GameBackgroundMusic.mp3", true);
 
     float gameStartTime = glfwGetTime();
     bool isGameWon = false;
     float previousTime = 0.0f;
     float deltaTime = 0.0f;
-    while (!glfwWindowShouldClose(window)) 
+    while (!glfwWindowShouldClose(window))
     {
         double mouseX, mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
         float currentTime = glfwGetTime();
         float elapsedGameTime = currentTime - gameStartTime;
         float frameTime = currentTime - previousTime;
-        /*if (frameTime < FRAME_TIME) { //ako je frame prebrz, pauziramo program da ispostujem 60fpsa po sekundi, ako nije samo nastavi
-            float sleepTime = FRAME_TIME - frameTime;
-            std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));//cekamo dok se ne dodje do zeljenog trajanja frejma
-            currentTime = glfwGetTime();
-            frameTime = currentTime - previousTime;
-        }*/
-        //deltaTime = frameTime;
-        //previousTime = currentTime;
+
         if (frameTime >= FRAME_TIME) {
             deltaTime = frameTime;
             std::cout << deltaTime << std::endl;
             currentTime = glfwGetTime();
             previousTime = currentTime;
 
-
-            // da li su svi tenkovi unisteni
             if (tank2.isDestroyed && tank3.isDestroyed && ((GAME_TIME - elapsedGameTime) > 0.0)) {
                 isGameWon = true;
             }
@@ -159,8 +155,8 @@ int main(void)
             pauseMenu.renderOverlay(textRenderingShader, mouseX, mouseY);
             for (auto* projectile : tank.projectiles) {
                 projectile->update(deltaTime, map);
-                CheckProjectileTankHit(tank2, *projectile);
-                CheckProjectileTankHit(tank3, *projectile);
+                CheckProjectileTankHit(*SoundEngine, tank2, *projectile);
+                CheckProjectileTankHit(*SoundEngine, tank3, *projectile);
 
                 projectile->render();
             }
@@ -168,6 +164,7 @@ int main(void)
                 if ((*it)->hasHitTarget() || !(*it)->isActive()) {
                     glm::vec2 explosionPos = (*it)->getPosition();
                     tank.explosions.push_back(new Explosion(explosionPos, FRAME_TIME));
+                    SoundEngine->play2D("explosion.mp3", false);
                     delete* it;
                     it = tank.projectiles.erase(it);
                 }
@@ -189,20 +186,21 @@ int main(void)
                 }
             }
 
-            processInput(window, tank, crosshair, turret, map, pauseMenu, deltaTime);
+            processInput(window, *SoundEngine, tank, crosshair, turret, map, pauseMenu, deltaTime);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
     }
 
+    SoundEngine->drop();
     tank.explosions.clear();
     tank.projectiles.clear();
     glfwTerminate();
     return 0;
 }
 
-void CheckProjectileTankHit(Tank& tank, Projectile& projectile) {
+void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile) {
     float distance = glm::distance(projectile.getPosition(), tank.position); //euklidska distanca izmedju projektila i tenka
     if (distance < 0.1f) {  // Adjust collision radius as needed
         //tank.position = glm::vec2(-0.7f, -0.7f);
@@ -239,7 +237,7 @@ void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& t
         0.02f, 1.92f, 0.8f, ((GAME_TIME - elapsedGameTime) <= 0.0) ? glm::vec3(0.8, 0.0f, 0.0f) : glm::vec3(0.8, 0.0f, 0.0f));
 
 }
-void processInput(GLFWwindow* window, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map, 
+void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map,
                   PauseMenu& pauseMenu, float deltaTime) {
     static bool escapeWasPressed = false;
     static bool leftMousePressed = false;
@@ -274,15 +272,40 @@ void processInput(GLFWwindow* window, Tank& tank, Crosshair& crosshair, Turret& 
         return;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) tank.moveForward(deltaTime, map);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) tank.moveBackward(deltaTime, map);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) tank.rotateBodyLeft(deltaTime, map);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) tank.rotateBodyRight(deltaTime, map); 
+    bool isMoving = false;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        tank.moveForward(deltaTime, map);
+        isMoving = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        tank.moveBackward(deltaTime, map);
+        isMoving = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        tank.rotateBodyLeft(deltaTime);
+        isMoving = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        tank.rotateBodyRight(deltaTime);
+        isMoving = true;
+    }
+    if (isMoving) {
+        if (tank.drivingSound == nullptr || tank.drivingSound->isFinished()) {
+            //tank.drivingSound = SoundEngine.play2D("tankDriving.mp3", true, false, true);
+        }
+    }
+    else {
+        if (tank.drivingSound != nullptr) {
+            tank.drivingSound->stop();
+            tank.drivingSound->drop();
+            tank.drivingSound = nullptr;
+        }
+    }
 
     float currentTime = glfwGetTime();
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         if (!leftMousePressed) {
-            tank.shoot(currentTime);
+            tank.shoot(currentTime, SoundEngine);
             leftMousePressed = true;
         }
     } else {

@@ -8,6 +8,8 @@
 #include "map.h"
 #include "projectile.h"
 #include "explosion.h"
+#include <irrKlang.h>
+using namespace irrklang;
 
 const float SHOOT_COOLDOWN = 2.0f;
 
@@ -21,30 +23,29 @@ public:
     float rotationSpeed;    // Brzina rotacije tela
     int ammunition = 50;
     float lastShotTime = -SHOOT_COOLDOWN;
-    Turret* turret; 
+    Turret* turret;
     std::vector<Projectile*> projectiles;
     std::vector<Explosion*> explosions;
-    float projectileSpeed = 1.0f;  // Adjust as needed
+    float projectileSpeed = 1.0f;
     unsigned int texture;
     unsigned int VAO, VBO;
     unsigned int unifiedShader;
-    bool isDestroyed = false;
-    //float vertices[];
+    bool isDestroyed = false; 
+    ISound* drivingSound = nullptr;
 
     // Konstruktor
-    Tank(glm::vec2 initPosition, float initSpeed, float initRotationSpeed, const char* textureSourceFile);
+    Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float initRotationSpeed, const char* textureSourceFile);
 
     void render();
 
     // Funkcije
     void moveForward(float deltaTime, Map& map);
     void moveBackward(float deltaTime, Map& map);
-    void rotateBodyLeft(float deltaTime, Map& map);
-    void rotateBodyRight(float deltaTime, Map& map);
+    void rotateBodyLeft(float deltaTime);
+    void rotateBodyRight(float deltaTime);
     void aimTurret(float mouseX, float mouseY, int windowWidth, int windowHeight);
     bool canShoot(float currentTime) const;
-    void shoot(float currentTime);
-    void resetPosition();
+    void shoot(float currentTime, ISoundEngine& SoundEngine);
 
     void setTurret(Turret* tankTurret);
     Turret getTurret();

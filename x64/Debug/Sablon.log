@@ -1,6 +1,15 @@
-﻿  Tank.cpp
-  explosion.cpp
-  Generating Code...
+﻿  main.cpp
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(121,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(129,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(136,38): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(215,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(305,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(317,69): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(317,56): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(318,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(318,20): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(319,31): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(319,23): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   Sablon.vcxproj -> C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\Sablon.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

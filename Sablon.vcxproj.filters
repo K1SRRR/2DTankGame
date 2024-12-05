@@ -148,4 +148,21 @@
       <Filter>Resource Files</Filter>
     </Font>
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="explosion.mp3">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="reload.mp3">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="tankFire.mp3">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="tankDriving.mp3">
+      <Filter>Resource Files</Filter>
+    </Media>
+    <Media Include="GameBackgroundMusic.mp3">
+      <Filter>Resource Files</Filter>
+    </Media>
+  </ItemGroup>
 </Project>

@@ -10,11 +10,10 @@ const char* vertexTurretShaderSource = R"(
         layout(location = 0) in vec2 inPos;
         layout(location = 1) in vec2 inTex;
         out vec2 chTex;
-        uniform vec2 uPos;
         uniform mat4 uModel;
         void main()
         {
-	        gl_Position = uModel * vec4(inPos + uPos, 0.0, 1.0);
+	        gl_Position = uModel * vec4(inPos, 0.0, 1.0);
 	        chTex = inTex;
         }
     )";
@@ -85,9 +84,6 @@ void Turret::render() {
     unsigned uModelLoc = glGetUniformLocation(unifiedShader, "uModel");
     glUniformMatrix4fv(uModelLoc, 1, GL_FALSE, &model[0][0]);
 
-    unsigned uPosLoc = glGetUniformLocation(unifiedShader, "uPos");
-    glUniform2f(uPosLoc, position.x, position.y);
-
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -112,7 +108,6 @@ glm::mat4 Turret::getModelMatrix() const {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(position, 0.0f));
     model = glm::rotate(model, glm::radians(turretAngle), glm::vec3(0.0f, 0.0f, 1.0f));
-    model = glm::translate(model, glm::vec3(-position, 0.0f));
     return model;
 }
 

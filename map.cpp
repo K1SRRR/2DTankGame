@@ -75,7 +75,7 @@ Map::Map() {
     bushTexture = loadImageToTexture("bush.png");
 
     glBindTexture(GL_TEXTURE_2D, wallTexture);
-    glGenerateMipmap(GL_TEXTURE_2D); //Generisemo mipmape 
+    glGenerateMipmap(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -83,7 +83,7 @@ Map::Map() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glBindTexture(GL_TEXTURE_2D, grassTexture);
-    glGenerateMipmap(GL_TEXTURE_2D); //Generisemo mipmape 
+    glGenerateMipmap(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -160,8 +160,8 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
     }
 
     // Check a wider area around the player
-    for (int dy = -2; dy <= 2; dy++) {
-        for (int dx = -2; dx <= 2; dx++) {
+    for (int dy = -1; dy <= 1; dy++) {
+        for (int dx = -1; dx <= 1; dx++) {
             int checkX = tileX + dx;
             int checkY = tileY + dy;
 
@@ -172,10 +172,8 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
             // If it's a wall tile, perform detailed collision
             if (mapMatrix[checkY][checkX] == TileType::WALL) {
                 // Calculate tile world position (center of the tile)
-                glm::vec2 tileCenter(
-                    (checkX * TILE_SIZE) - 1.0f + (TILE_SIZE / 2.0f),
-                    (checkY * TILE_SIZE) - 1.0f + (TILE_SIZE / 2.0f)
-                );
+                glm::vec2 tileCenter((checkX * TILE_SIZE) - 1.0f + (TILE_SIZE / 2.0f),
+                                     (checkY * TILE_SIZE) - 1.0f + (TILE_SIZE / 2.0f));
 
                 // More robust collision detection
                 float closestX = clamp(position.x,
@@ -190,8 +188,8 @@ bool Map::checkCollision(glm::vec2 position, float radius) {
                 float distanceY = position.y - closestY;
 
                 // Check if the distance is less than the circle's radius
-                float distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
-                if (distanceSquared < (radius * radius)) {
+                float distanceSquared = sqrt((distanceX * distanceX) + (distanceY * distanceY)); //euklidska distanca
+                if (distanceSquared < radius) {
                     return true;  // Collision detected
                 }
             }
@@ -229,7 +227,7 @@ void Map::placeBush(int x, int y) {
 }
 
 void Map::removeBush(int x, int y) {
-    if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT) {
+    if (x >= 0 && x < MATRIX_WIDTH && y >= 0 && y < MATRIX_HEIGHT && hasBush(x, y)) {
         bushMatrix[y][x] = false;
     }
 }
