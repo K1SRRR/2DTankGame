@@ -178,9 +178,12 @@
     <ClInclude Include="turret.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="AP-shell.png" />
     <Image Include="bush.png" />
+    <Image Include="dust.png" />
     <Image Include="explosion.png" />
     <Image Include="grass.jpg" />
+    <Image Include="HE-shell.png" />
     <Image Include="projectile.png" />
     <Image Include="tank.png" />
     <Image Include="tank2.png" />

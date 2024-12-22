@@ -6,9 +6,14 @@
 #include "Map.h"
 #include "explosion.h"
 
+enum class ProjectileType {
+    AP,
+    HE
+};
+
 class Projectile {
 public:
-    Projectile(glm::vec2 startPosition, float angle, float speed);
+    Projectile(glm::vec2 startPosition, float angle, float speed, ProjectileType type, float size);
 
     void update(float deltaTime, Map& map);
     void render();
@@ -18,7 +23,8 @@ public:
     glm::vec2 getPosition() const { return position; }
 
 
-    glm::vec2 position;
+    glm::vec2 position; 
+    ProjectileType type;
     float angle;
     float speed;
     bool active;
@@ -28,7 +34,6 @@ public:
     unsigned int VAO, VBO;
     unsigned int shader;
 
-    void initialize();
     void checkMapCollision(Map& map);
 };
 

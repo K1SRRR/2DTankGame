@@ -99,6 +99,9 @@ void Turret::aimAtMouse(float mouseX, float mouseY, int windowWidth, int windowH
 
     turretAngle = glm::degrees(atan2(normalizedY - position.y, normalizedX - position.x)) - 90.0f;
 }
+void Turret::aimAtPlayer(float playerPositionX, float playerPositionY, int windowWidth, int windowHeight) {
+    turretAngle = glm::degrees(atan2(playerPositionY - position.y, playerPositionX - position.x)) - 90.0f;
+}
 
 glm::mat4 Turret::getModelMatrix() const {
     //std::cout << "positionX: " << position.x << std::endl;

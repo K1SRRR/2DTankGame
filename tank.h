@@ -11,7 +11,7 @@
 #include <irrKlang.h>
 using namespace irrklang;
 
-const float SHOOT_COOLDOWN = 2.0f;
+const float SHOOT_COOLDOWN = 0.4f;
 
 class Tank {
 public:
@@ -20,7 +20,9 @@ public:
     float turretAngle;      // Ugao rotacije kupole
     float speed;            // Brzina kretanja
     float rotationSpeed;    // Brzina rotacije tela
-    int ammunition = 50;
+    int ammunitionAP = 10;  // Broj AP granata
+    int ammunitionHE = 10;  // Broj HE granata
+    ProjectileType currentProjectileType = ProjectileType::AP;
     float lastShotTime = -SHOOT_COOLDOWN;
     Turret* turret;
     std::vector<Projectile*> projectiles;
@@ -31,10 +33,11 @@ public:
     unsigned int unifiedShader;
     bool isDestroyed = false; 
     ISound* drivingSound = nullptr;
+    std::vector<Tank*> enemyTanks;
 
     Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float initRotationSpeed, const char* textureSourceFile);
 
-    void render();
+    void render(float deltaTime, Map& map, ISoundEngine& soundEngine);
     void moveForward(float deltaTime, Map& map);
     void moveBackward(float deltaTime, Map& map);
     void rotateBodyLeft(float deltaTime);
@@ -42,11 +45,25 @@ public:
     void aimTurret(float mouseX, float mouseY, int windowWidth, int windowHeight);
     bool canShoot(float currentTime) const;
     void shoot(float currentTime, ISoundEngine& SoundEngine);
+    void setAmmunitionAP(float currentTime);
+    void setAmmunitionHE(float currentTime);
+    void aimTurretEnemy(float mouseX, float mouseY, int windowWidth, int windowHeight);
+    void CheckProjectileTankHit(Tank& tank, Projectile& projectile);
+
+    void updateProjectiles(ISoundEngine& soundEngine);
+    void renderProjectiles(float deltaTime, Map& map);
+    void updateExplosions();
+    void renderExplosions(float deltaTime);
 
     void setTurret(Turret* tankTurret);
     Turret getTurret();
+    void setEnemy(Tank& tank);
+
+    void moveToTarget(glm::vec2 target, float deltaTime, Map& map); // Nova metoda
+    void performAITasks(glm::vec2 playerPosition, float currentTime, float deltaTime, Map& map, int windowWidth, int windowHeight, ISoundEngine& SoundEngine); // AI logika
 
     glm::mat4 getModelMatrix() const;
+    ~Tank();
 };
 
 #endif // TANK_H

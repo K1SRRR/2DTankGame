@@ -18,8 +18,8 @@ public:
 
     void render();
     void aimAtMouse(float mouseX, float mouseY, int windowWidth, int windowHeight);
+    void aimAtPlayer(float playerPositionX, float playerPositionY, int windowWidth, int windowHeight);
 
-    // Matrica modela za rendering
     glm::mat4 getModelMatrix() const;
 };
 

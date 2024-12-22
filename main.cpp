@@ -34,10 +34,11 @@ const float GAME_TIME = 20.0f;
 void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map,
                   PauseMenu& pauseMenu, float deltaTime);
 void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& textRenderer, float elapsedGameTime, bool isGameWon);
-void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile);
+//void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile);
 
 int main(void)
 {
+    srand(static_cast<unsigned>(time(0)));
     if (!glfwInit()) 
     {
         std::cout<<"GLFW Biblioteka se nije ucitala! :(\n";
@@ -83,6 +84,10 @@ int main(void)
     Tank tank3(glm::vec2(0.7f, 0.7f), 0.0f, 0.001f, 0.2f, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret3(glm::vec2(0.0f, 0.0f), "turret2.png");
     tank3.setTurret(&turret3);
+    tank.setEnemy(tank2);
+    tank.setEnemy(tank3);
+    tank2.setEnemy(tank);
+    tank3.setEnemy(tank);
 
     Crosshair crosshair; 
     Map map;
@@ -111,14 +116,20 @@ int main(void)
     map.placeBush(9, 9);
     map.placeBush(10, 9);
     PauseMenu pauseMenu(WINDOW_WIDTH, WINDOW_HEIGHT, pauseMenuTextRenderer);
+    Projectile apProjectile(glm::vec2(0.15f, -0.93f), 0.0f, 0.0f, ProjectileType::AP, 2.5f);
+    Projectile heProjectile(glm::vec2(0.55f, -0.93f), 0.0f, 0.0f, ProjectileType::HE, 2.5f);
+
     ISoundEngine* SoundEngine = createIrrKlangDevice(); 
     SoundEngine->setSoundVolume(0.15f);
-    SoundEngine->play2D("GameBackgroundMusic.mp3", true);
+    //SoundEngine->play2D("GameBackgroundMusic.mp3", true);///////////////////////////////////////////////////
 
     float gameStartTime = glfwGetTime();
     bool isGameWon = false;
     float previousTime = 0.0f;
     float deltaTime = 0.0f;
+    bool APSelected = true;
+    bool HESelected = false;
+
     while (!glfwWindowShouldClose(window))
     {
         double mouseX, mouseY;
@@ -141,16 +152,21 @@ int main(void)
             glClear(GL_COLOR_BUFFER_BIT);
 
             map.render();
-            tank.render();
-            turret.render();
-            if (!tank2.isDestroyed) tank2.render();
+            std::vector<Tank*> enemyTanks = { &tank2, &tank3 };
+
+            if (!tank.isDestroyed) tank.render(deltaTime, map, *SoundEngine);
+            if (!tank.isDestroyed) turret.render();
+            if (!tank2.isDestroyed) tank2.render(deltaTime, map, *SoundEngine);
             if (!tank2.isDestroyed) turret2.render();
-            if (!tank3.isDestroyed) tank3.render();
+            if (!tank3.isDestroyed) tank3.render(deltaTime, map, *SoundEngine);
             if (!tank3.isDestroyed) turret3.render();
             crosshair.render(tank, currentTime);
+            apProjectile.render();
+            heProjectile.render();
+            tank2.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
             TextRendering(textRenderingShader, tank, mainTextRenderer, elapsedGameTime, isGameWon);
             pauseMenu.renderOverlay(textRenderingShader, mouseX, mouseY);
-            for (auto* projectile : tank.projectiles) {
+            /*for (auto* projectile : tank.projectiles) {
                 projectile->update(deltaTime, map);
                 CheckProjectileTankHit(*SoundEngine, tank2, *projectile);
                 CheckProjectileTankHit(*SoundEngine, tank3, *projectile);
@@ -159,7 +175,9 @@ int main(void)
             for (auto it = tank.projectiles.begin(); it != tank.projectiles.end();) {
                 if ((*it)->hasHitTarget() || !(*it)->isActive()) {
                     glm::vec2 explosionPos = (*it)->getPosition();
-                    tank.explosions.push_back(new Explosion(explosionPos, FRAME_TIME));
+                    tank.explosions.push_back(((*it)->type == ProjectileType::AP) ? 
+                                                new Explosion(explosionPos, FRAME_TIME, "dust.png") : 
+                                                new Explosion(explosionPos, FRAME_TIME, "explosion.png"));
                     SoundEngine->play2D("explosion.mp3", false);
                     delete* it;
                     it = tank.projectiles.erase(it);
@@ -180,7 +198,7 @@ int main(void)
                 else {
                     ++it;
                 }
-            }
+            }*/
 
             processInput(window, *SoundEngine, tank, crosshair, turret, map, pauseMenu, deltaTime);
 
@@ -190,20 +208,20 @@ int main(void)
     }
 
     SoundEngine->drop();
-    tank.explosions.clear();
-    tank.projectiles.clear();
+    //tank.explosions.clear();
+    //tank.projectiles.clear();
     glfwTerminate();
     return 0;
 }
 
-void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile) {
-    float distance = glm::distance(projectile.getPosition(), tank.position); //euklidska distanca izmedju projektila i tenka
-    if (distance < 0.1f) {
-        tank.isDestroyed = true;
-        projectile.hitTarget = true;
-        projectile.active = false;
-    }
-}
+//void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile) {
+//    float distance = glm::distance(projectile.getPosition(), tank.position); //euklidska distanca izmedju projektila i tenka
+//    if (distance < 0.1f) {
+//        tank.isDestroyed = true;
+//        projectile.hitTarget = true;
+//        projectile.active = false;
+//    }
+//}
 
 void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& textRenderer, float elapsedGameTime, bool isGameWon) {
     float currentTime = glfwGetTime();
@@ -213,14 +231,30 @@ void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& t
     std::ostringstream stream;
     stream << "Reloading: " << std::fixed << std::setprecision(2) << remainingTime;
 
-    if (tank.ammunition > 0) {
+    if (tank.ammunitionAP > 0 || tank.ammunitionHE > 0) {
         textRenderer.renderText(textRenderingShader, (tank.canShoot(currentTime)) ? "Ready to fire" : stream.str(),
-            0.02f, 0.02f, 0.8f, (tank.canShoot(currentTime)) ? glm::vec3(0.2f, 1.0f, 0.2f) : glm::vec3(0.8, 0.0f, 0.0f));
-        textRenderer.renderText(textRenderingShader, "Ammunition: " + std::to_string(tank.ammunition), 1.35f, 0.02f, 0.8f, glm::vec3(0.2f, 1.0f, 0.2f));
+            0.02f, 0.05f, 0.8f, (tank.canShoot(currentTime)) ? glm::vec3(0.2f, 1.0f, 0.2f) : glm::vec3(0.8, 0.0f, 0.0f));
+        //textRenderer.renderText(textRenderingShader, "Ammunition: " + std::to_string(tank.ammunition), 1.35f, 0.02f, 0.8f, glm::vec3(0.2f, 1.0f, 0.2f));
     }
     else {
-        textRenderer.renderText(textRenderingShader, "Ammunition empty", 1.18f, 0.02f, 0.8f, glm::vec3(0.8, 0.0f, 0.0f));
+        textRenderer.renderText(textRenderingShader, "Ammunition empty", 0.02f, 0.05f, 0.8f, glm::vec3(0.8, 0.0f, 0.0f));
     }
+    glm::vec3 apColor = (tank.currentProjectileType == ProjectileType::AP) ? glm::vec3(0.96f, 0.76f, 0.0f) : glm::vec3(0.2f, 1.0f, 0.2f);
+    glm::vec3 heColor = (tank.currentProjectileType == ProjectileType::HE) ? glm::vec3(0.96f, 0.76f, 0.0f) : glm::vec3(0.2f, 1.0f, 0.2f);
+    std::string apText = (tank.currentProjectileType == ProjectileType::AP) ? "*" : "";
+    std::string heText = (tank.currentProjectileType == ProjectileType::HE) ? "*" : "";
+    if (tank.ammunitionAP == 0) {
+        apColor = glm::vec3(0.8, 0.0f, 0.0f);
+        apText = "";
+    }
+
+    if (tank.ammunitionHE == 0) {
+        heColor = glm::vec3(0.8, 0.0f, 0.0f);
+        heText = "";
+    }
+
+    textRenderer.renderText(textRenderingShader, apText + std::to_string(tank.ammunitionAP) + apText, 1.2f, 0.05f, 0.8f, apColor);
+    textRenderer.renderText(textRenderingShader, heText + std::to_string(tank.ammunitionHE) + heText, 1.6f, 0.05f, 0.8f, heColor);
 
     std::ostringstream timeStream;
     timeStream << "Time left: " << std::fixed << std::setprecision(2) << (GAME_TIME - elapsedGameTime) << "s";
@@ -233,6 +267,8 @@ void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& t
 }
 void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map,
                   PauseMenu& pauseMenu, float deltaTime) {
+    float currentTime = glfwGetTime();
+
     static bool escapeWasPressed = false;
     static bool leftMousePressed = false;
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -266,6 +302,11 @@ void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Cro
         return;
     }
 
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        tank.setAmmunitionAP(currentTime); // Postavi na AP
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        tank.setAmmunitionHE(currentTime); // Postavi na HE
+
     bool isMoving = false;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         tank.moveForward(deltaTime, map);
@@ -296,7 +337,6 @@ void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Cro
         }
     }
 
-    float currentTime = glfwGetTime();
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         if (!leftMousePressed) {
             tank.shoot(currentTime, SoundEngine);

@@ -136,6 +136,15 @@
     <Image Include="turret2.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="AP-shell.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="dust.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="HE-shell.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <Font Include="BRLNSB.TTF">

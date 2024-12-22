@@ -3,13 +3,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 
-Explosion::Explosion(glm::vec2 position, float frameTime)
+Explosion::Explosion(glm::vec2 position, float frameTime, const char* explosionImage)
     : position(position), currentFrame(0), totalFrames(80),
     animationSpeed(frameTime), frameTimer(0.0f), scale(1.0f) {
-    initialize();
-}
-
-void Explosion::initialize() {
+    
     const char* vertexShaderSource = R"(
         #version 330 core
         layout(location = 0) in vec2 inPos;
@@ -51,8 +48,12 @@ void Explosion::initialize() {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    texture = loadImageToTexture("explosion.png");
+    
+    if (explosionImage == "dust.png") {
+        this->scale = 0.5f;
+        this->totalFrames = 50;
+    }
+    texture = loadImageToTexture(explosionImage);
     glBindTexture(GL_TEXTURE_2D, texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     glEnable(GL_BLEND);

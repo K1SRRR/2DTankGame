@@ -1,15 +1,12 @@
-#include "Projectile.h"
+﻿#include "Projectile.h"
 #include "globalFunctions.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <cmath>
 
-Projectile::Projectile(glm::vec2 startPosition, float angle, float speed)
+Projectile::Projectile(glm::vec2 startPosition, float angle, float speed, ProjectileType type, float size)
     : position(startPosition), angle(angle + 90.0f), speed(speed),
-    active(true), hitTarget(false), texture(0) {
-    initialize();
-}
-
-void Projectile::initialize() {
+    active(true), hitTarget(false), texture(0), type(type) {
+       
     const char* vertexShaderSource = R"(
         #version 330 core
         layout(location = 0) in vec2 inPos;
@@ -35,10 +32,10 @@ void Projectile::initialize() {
     shader = createShader(vertexShaderSource, fragmentShaderSource);
 
     float vertices[] = {
-        -0.02f, -0.02f,  1.0f, 0.0f,
-        -0.02f,  0.02f,  0.0f, 0.0f,
-         0.02f, -0.02f,  1.0f, 1.0f,
-         0.02f,  0.02f,  0.0f, 1.0f
+        -0.025f * size, -0.025f * size,  1.0f, 0.0f,
+        -0.025f * size,  0.025f * size,  0.0f, 0.0f,
+         0.025f * size, -0.025f * size,  1.0f, 1.0f,
+         0.025f * size,  0.025f * size,  0.0f, 1.0f
     };
 
     glGenVertexArrays(1, &VAO);
@@ -52,7 +49,14 @@ void Projectile::initialize() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    texture = loadImageToTexture("projectile.png");
+    if (type == ProjectileType::HE) {
+        this->speed *= 0.66f; // HE je za trećinu sporiji
+        texture = loadImageToTexture("HE-shell.png");
+    } 
+    else 
+    {
+        texture = loadImageToTexture("AP-shell.png");
+    }
     glBindTexture(GL_TEXTURE_2D, texture);
     glGenerateMipmap(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -61,6 +65,8 @@ void Projectile::initialize() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    
 }
 
 void Projectile::update(float deltaTime, Map& map) {

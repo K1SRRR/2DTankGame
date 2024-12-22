@@ -6,7 +6,7 @@
 
 class Explosion {
 public:
-    Explosion(glm::vec2 position, float frameTime);
+    Explosion(glm::vec2 position, float frameTime, const char* explosionImage);
 
     void update(float deltaTime);
     void render();
@@ -24,8 +24,6 @@ private:
     int totalFrames;
     float frameTimer;
     float scale;
-
-    void initialize();
 };
 
 #endif
