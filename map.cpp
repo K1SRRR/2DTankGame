@@ -64,7 +64,7 @@ Map::Map() {
 
     // Load textures and setup rendering
     wallTexture = loadImageToTexture("wall.jpg");
-    grassTexture = loadImageToTexture("grass.jpg");
+    grassTexture = loadImageToTexture("floor-bckground.jpg");////////// grass.jpg
     bushTexture = loadImageToTexture("bush.png");
 
     glBindTexture(GL_TEXTURE_2D, wallTexture);
@@ -136,6 +136,24 @@ void Map::render() {
 
     glBindVertexArray(0);
     glUseProgram(0);
+}
+void Map::clearAll() {
+    // Reset all tiles to grass
+    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+        for (int x = 0; x < MATRIX_WIDTH; x++) {
+            // Keep walls only at the borders
+            if (x == 0 || x == MATRIX_WIDTH - 1 || y == 0 || y == MATRIX_HEIGHT - 1) {
+                mapMatrix[y][x] = TileType::WALL;
+            }
+            else {
+                mapMatrix[y][x] = TileType::GRASS;
+            }
+        }
+    }
+
+    // Clear all bushes
+    bushMatrix.clear();
+    bushMatrix.resize(MATRIX_HEIGHT, std::vector<bool>(MATRIX_WIDTH, false));
 }
 
 bool Map::checkCollision(glm::vec2 position, float radius) {

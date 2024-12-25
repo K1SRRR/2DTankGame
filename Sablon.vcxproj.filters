@@ -51,6 +51,15 @@
     <ClCompile Include="projectile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Astar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="healthBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="levelCompleteMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -107,6 +116,15 @@
     <ClInclude Include="projectile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Astar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="healthBar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="levelCompleteMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="tank.png">
@@ -143,6 +161,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="HE-shell.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="light-target.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="floor-bckground.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

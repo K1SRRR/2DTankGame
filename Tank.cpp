@@ -9,11 +9,12 @@
 #include <ctime>
 
 #include "globalFunctions.h"
+#include "Astar.h"
 
 // Konstruktor
-Tank::Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float initRotationSpeed, const char* textureSourceFile)
+Tank::Tank(glm::vec2 initPosition, float initBodyAngle, float initSpeed, float initRotationSpeed, TankType type, const char* textureSourceFile)
     : position(initPosition), bodyAngle(initBodyAngle+90.0f), turretAngle(0.0f),
-    speed(initSpeed), rotationSpeed(initRotationSpeed), texture(0), enemyTanks()
+    speed(initSpeed), rotationSpeed(initRotationSpeed), texture(0), enemyTanks(), type(type), healthBar()
 {
     const char* vertexShaderSource = R"(
         #version 330 core
@@ -99,13 +100,15 @@ Tank::~Tank() {
 }
 
 void Tank::render(float deltaTime, Map& map, ISoundEngine& soundEngine) {
-    if (isDestroyed) return;
-
     renderProjectiles(deltaTime, map);
     renderExplosions(deltaTime);
 
     updateProjectiles(soundEngine);
     updateExplosions();
+
+    if (isDestroyed) return;
+    float currentTime = glfwGetTime();
+    healthBar.render(*this, currentTime);
 
     unsigned int stride = (2 + 2) * sizeof(float);
     glm::mat4 model = getModelMatrix();
@@ -194,7 +197,7 @@ glm::mat4 Tank::getModelMatrix() const {
 }
 
 bool Tank::canShoot(float currentTime) const {
-    bool canShoot = (ammunitionAP > 0 || ammunitionHE > 0) && (currentTime - lastShotTime >= SHOOT_COOLDOWN);
+    bool canShoot = (ammunitionAP > 0 || ammunitionHE > 0) && (currentTime - lastShotTime >= SHOOT_COOLDOWN) && !isDestroyed;
     //std::cout << "CAN SHOOT: " << canShoot << std::endl;
     return canShoot;
 }
@@ -202,14 +205,25 @@ bool Tank::canShoot(float currentTime) const {
 void Tank::shoot(float currentTime, ISoundEngine& SoundEngine) {
     if (canShoot(currentTime)) {
         glm::vec2 projectileStart = position; // startna pozicija projektila u odnosu na kupolu
-        projectileStart.x += cos(glm::radians(turretAngle+90.0f)) * 0.2f;
-        projectileStart.y += sin(glm::radians(turretAngle+90.0f)) * 0.2f;
+        if (type == TankType::HEAVY) {
+            projectileStart.x += cos(glm::radians(turretAngle + 90.0f)) * 0.2f;
+            projectileStart.y += sin(glm::radians(turretAngle + 90.0f)) * 0.2f;
+        }
+        else {
+            projectileStart.x += cos(glm::radians(bodyAngle)) * 0.1f;
+            projectileStart.y += sin(glm::radians(bodyAngle)) * 0.1f;
+        }
 
         Projectile* newProjectile;
-        if (currentProjectileType == ProjectileType::AP)
-            newProjectile = new Projectile(projectileStart, turretAngle, projectileSpeed, ProjectileType::AP, 1.0f);
-        else 
-            newProjectile = new Projectile(projectileStart, turretAngle, projectileSpeed, ProjectileType::HE, 1.0f);
+        if (type == TankType::HEAVY) {
+            if (currentProjectileType == ProjectileType::AP)
+                newProjectile = new Projectile(projectileStart, turretAngle, projectileSpeed, ProjectileType::AP, 1.0f);
+            else
+                newProjectile = new Projectile(projectileStart, turretAngle, projectileSpeed, ProjectileType::HE, 1.0f);
+        }
+        else {
+            newProjectile = new Projectile(projectileStart, bodyAngle - 90.0f, projectileSpeed, ProjectileType::AP, 1.0f);
+        }
         projectiles.push_back(newProjectile);
 
         if (currentProjectileType == ProjectileType::AP)
@@ -228,7 +242,7 @@ void Tank::shoot(float currentTime, ISoundEngine& SoundEngine) {
 }
 // Nova metoda za kretanje prema cilju
 void Tank::moveToTarget(glm::vec2 target, float deltaTime, Map& map) {
-    glm::vec2 direction = glm::normalize(target - position);
+    glm::vec2 direction = target - position;
     glm::vec2 nextPosition = position;
     nextPosition.x += cos(glm::radians(bodyAngle)) * speed * deltaTime;
     nextPosition.y += sin(glm::radians(bodyAngle)) * speed * deltaTime;
@@ -247,19 +261,60 @@ void Tank::moveToTarget(glm::vec2 target, float deltaTime, Map& map) {
 
 // AI logika
 void Tank::performAITasks(glm::vec2 playerPosition, float currentTime, float deltaTime, Map& map, int windowWidth, int windowHeight, ISoundEngine& SoundEngine) {
-    static float nextShotTime = currentTime + (rand() % 9 + 2); // Nasumično vreme za sledeći hitac
+    if (type == TankType::LIGHT) {
+        if (currentTime >= nextShotTime && canShoot(currentTime)) {
+            shoot(currentTime, SoundEngine);
+            nextShotTime = currentTime + (rand() % 8 + 2); // Postavi novo vreme između 2-9 sekundi
+        }
+    }
+    else {
+        AStar astar;
+        std::vector<glm::vec2> path = astar.findPath(map, position, playerPosition);
+        //std::cout << "Path: \n";
+        //for (const auto& point : path) {
+        //    std::cout << "X: " << point.x << ", Y: " << point.y << "\n";
+        //}
+        // Praćenje puta
+        followPath(path, deltaTime, map);
 
-    // Kretanje prema igraču
-    moveToTarget(playerPosition, deltaTime, map); // Pretpostavimo da je deltaTime konstantan
+        // Nišani prema igraču
+        aimTurretEnemy(playerPosition.x, playerPosition.y, windowWidth, windowHeight);
+        turret->aimAtPlayer(playerPosition.x, playerPosition.y, windowWidth, windowHeight);
 
-    // Nišani prema igraču
-    aimTurretEnemy(playerPosition.x, playerPosition.y, windowWidth, windowHeight);
-    turret->aimAtPlayer(playerPosition.x, playerPosition.y, windowWidth, windowHeight);
+        // Puca ako je vreme za sledeći hitac
+        if (currentTime >= nextShotTime && canShoot(currentTime)) {
+            shoot(currentTime, SoundEngine);
+            nextShotTime = currentTime + (rand() % 8 + 2); // Postavi novo nasumično vreme
+        }
+    }
+}
+void Tank::followPath(const std::vector<glm::vec2>& path, float deltaTime, Map& map) {
+    if (path.empty()) return;
 
-    // Puca ako je vreme za sledeći hitac
-    if (currentTime >= nextShotTime && canShoot(currentTime)) {
-        shoot(currentTime, SoundEngine);
-        nextShotTime = currentTime + (rand() % 9 + 2); // Postavi novo nasumično vreme
+    for (size_t i = 1; i < path.size(); ++i) {
+        glm::vec2 currentTarget = path[i];
+
+        // Rotiraj tenk ka sledećoj poziciji na putu
+        glm::vec2 direction = currentTarget - position;
+        float targetAngle = glm::degrees(atan2(direction.y, direction.x));
+
+        // Rotiraj u pravcu cilja
+        if (targetAngle > bodyAngle) {
+            rotateBodyLeft(deltaTime);
+        }
+        else if (targetAngle < bodyAngle) {
+            rotateBodyRight(deltaTime);
+        }
+
+        // Kreni napred
+        moveForward(deltaTime, map);
+    }
+}
+void Tank::setAngle(float newAngle) {
+    bodyAngle = newAngle;
+    turretAngle = newAngle;
+    if (turret != nullptr) {  // Provera da li turret postoji
+        turret->turretAngle = newAngle - 90.0f;
     }
 }
 
@@ -309,7 +364,9 @@ void Tank::renderProjectiles(float deltaTime, Map& map) {
     for (auto* projectile : projectiles) {
         projectile->update(deltaTime, map);
         for (auto* enemyTank : enemyTanks) {
-            CheckProjectileTankHit(*enemyTank, *projectile);
+            if (!enemyTank->isDestroyed) {
+                CheckProjectileTankHit(*enemyTank, *projectile);
+            }
         }
         projectile->render();
     }
@@ -338,9 +395,35 @@ void Tank::renderExplosions(float deltaTime) {
 
 
 void Tank::CheckProjectileTankHit(Tank& tank, Projectile& projectile) {
+    if (tank.isDestroyed) return;
+
     float distance = glm::distance(projectile.getPosition(), tank.position); //euklidska distanca izmedju projektila i tenka
     if (distance < 0.1f) {
-        tank.isDestroyed = true;
+        if (tank.type == TankType::LIGHT) {
+            if (projectile.type == ProjectileType::HE) {
+                tank.hitpoints = 0; // Uništi odmah ako je HE granata
+            }
+            else if (projectile.type == ProjectileType::AP) {
+                tank.hitpoints -= 50; // AP skida 50% helta
+            }
+        }
+        else if (tank.type == TankType::HEAVY) {
+            if (projectile.type == ProjectileType::AP) {
+                tank.hitpoints -= 50; // AP skida 50% helta
+            }
+            else if (projectile.type == ProjectileType::HE) {
+                tank.hitpoints -= 25; // HE skida 25% helta
+            }
+        }
+
+        // Proveri da li je tenk uništen
+        if (tank.hitpoints <= 0) {
+            tank.isDestroyed = true;
+        }
+        else {
+            float currentTime = glfwGetTime();
+            tank.healthBar.setLastHitTime(currentTime);
+        }
         projectile.hitTarget = true;
         projectile.active = false;
     }
@@ -348,4 +431,45 @@ void Tank::CheckProjectileTankHit(Tank& tank, Projectile& projectile) {
 
 void Tank::setEnemy(Tank& tank) {
     enemyTanks.push_back(&tank);
+}
+
+void Tank::reset(glm::vec2 initPosition, float initBodyAngle) {
+    // Reset position and angles
+    this->position = initPosition;
+    this->bodyAngle = initBodyAngle + 90.0f;
+    this->turretAngle = 0.0f;
+    if (this->turret != nullptr) {  // Provera da li turret postoji
+        this->turret->position = this->position;
+    }
+
+    // Reset health
+    this->hitpoints = 100.0f;
+    this->isDestroyed = false;
+
+    // Reset ammunition
+    this->ammunitionAP = 10;
+    this->ammunitionHE = 10;
+    this->currentProjectileType = ProjectileType::AP;
+
+    // Reset shooting cooldown
+    this->lastShotTime = -SHOOT_COOLDOWN;
+    this->nextShotTime = 2.0f;
+
+    // Clear active projectiles and explosions
+    for (auto* projectile : projectiles) {
+        delete projectile;
+    }
+    projectiles.clear();
+
+    for (auto* explosion : explosions) {
+        delete explosion;
+    }
+    explosions.clear();
+
+    // Reset sound
+    if (drivingSound) {
+        drivingSound->stop();
+        drivingSound->drop();
+        drivingSound = nullptr;
+    }
 }

@@ -32,6 +32,7 @@ public:
     void placeBush(int x, int y);
     void removeBush(int x, int y);
     bool hasBush(int x, int y) const;
+    void clearAll();
 };
 
 #endif

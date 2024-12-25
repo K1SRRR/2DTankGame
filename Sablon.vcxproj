@@ -143,9 +143,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Astar.cpp" />
     <ClCompile Include="crosshair.cpp" />
     <ClCompile Include="explosion.cpp" />
     <ClCompile Include="globalFunctions.cpp" />
+    <ClCompile Include="healthBar.cpp" />
+    <ClCompile Include="levelCompleteMenu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="oldMain.cpp" />
@@ -166,9 +169,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Teksture\stb_image.h" />
+    <ClInclude Include="Astar.h" />
     <ClInclude Include="crosshair.h" />
     <ClInclude Include="explosion.h" />
     <ClInclude Include="globalFunctions.h" />
+    <ClInclude Include="healthBar.h" />
+    <ClInclude Include="levelCompleteMenu.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="pauseMenu.h" />
     <ClInclude Include="projectile.h" />
@@ -182,8 +188,10 @@
     <Image Include="bush.png" />
     <Image Include="dust.png" />
     <Image Include="explosion.png" />
+    <Image Include="floor-bckground.jpg" />
     <Image Include="grass.jpg" />
     <Image Include="HE-shell.png" />
+    <Image Include="light-target.png" />
     <Image Include="projectile.png" />
     <Image Include="tank.png" />
     <Image Include="tank2.png" />

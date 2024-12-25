@@ -1,18 +1,6 @@
 ﻿  Tank.cpp
-  crosshair.cpp
-  main.cpp
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(126,25): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(137,27): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(144,38): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(227,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(270,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(351,69): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(351,56): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(352,28): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(352,20): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(353,31): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\srdja\Desktop\tenkici\Sablon\main.cpp(353,23): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-  Generating Code...
+C:\Users\srdja\Desktop\tenkici\Sablon\Tank.cpp(110,23): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\srdja\Desktop\tenkici\Sablon\Tank.cpp(424,31): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   Sablon.vcxproj -> C:\Users\srdja\Desktop\tenkici\Sablon\x64\Debug\Sablon.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

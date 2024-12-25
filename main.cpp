@@ -18,6 +18,7 @@
 #include <string>
 #include "globalFunctions.h"
 #include "pauseMenu.h"
+#include "levelCompleteMenu.h"
 #include "TextRenderer.h"
 
 #include <thread>
@@ -30,10 +31,13 @@ const unsigned int WINDOW_HEIGHT= 900;
 const float TARGET_FPS = 120.0f;
 const float FRAME_TIME = 1.0f / TARGET_FPS;
 const float GAME_TIME = 20.0f;
+const int TOTAL_LEVELS = 2;
 
 void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map,
                   PauseMenu& pauseMenu, float deltaTime);
 void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& textRenderer, float elapsedGameTime, bool isGameWon);
+void setupLevel(int level, Tank& tank, Tank& tank2, Tank& tank3,
+    Tank& light1, Tank& light2, Tank& light3, Tank& light4, Map& map);
 //void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile);
 
 int main(void)
@@ -74,20 +78,31 @@ int main(void)
     mainTextRenderer.init("BRLNSR.TTF", 48);
     TextRenderer pauseMenuTextRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
     pauseMenuTextRenderer.init("BRLNSR.TTF", 48);
+    TextRenderer levelCompleteMenuTextRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
+    levelCompleteMenuTextRenderer.init("BRLNSR.TTF", 48);
 
-    Tank tank(glm::vec2(0.0f, -0.7f), 0.0f, 0.3f, 60.0f, "tank.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
+    Tank tank(glm::vec2(0.0f, -0.7f), 0.0f, 0.3f, 60.0f, TankType::HEAVY, "tank.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret(glm::vec2(0.0f, 0.0f), "turret.png");
     tank.setTurret(&turret);
-    Tank tank2(glm::vec2(-0.7f, 0.7f), 0.0f, 0.001f, 0.2f, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
+    Tank tank2(glm::vec2(-0.7f, 0.7f), 0.0f, 0.03f, 2.0f, TankType::HEAVY, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret2(glm::vec2(0.0f, 0.0f), "turret2.png");
     tank2.setTurret(&turret2);
-    Tank tank3(glm::vec2(0.7f, 0.7f), 0.0f, 0.001f, 0.2f, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
+    Tank tank3(glm::vec2(0.7f, 0.7f), 0.0f, 0.03f, 2.0f, TankType::HEAVY, "tank2.png"); // Početna pozicija, pocetni ugao, brzina, rotaciona brzina
     Turret turret3(glm::vec2(0.0f, 0.0f), "turret2.png");
+    Tank light1(glm::vec2(0.5f, 0.4f), 0.0f, 0.0f, 0.0f, TankType::LIGHT, "light-target.png");
+    Tank light2(glm::vec2(0.7f, 0.4f), 0.0f, 0.0f, 0.0f, TankType::LIGHT, "light-target.png");
+    Tank light3(glm::vec2(-0.5f, 0.4f), 0.0f, 0.0f, 0.0f, TankType::LIGHT, "light-target.png");
+    Tank light4(glm::vec2(-0.7f, 0.4f), 0.0f, 0.0f, 0.0f, TankType::LIGHT, "light-target.png");
     tank3.setTurret(&turret3);
     tank.setEnemy(tank2);
     tank.setEnemy(tank3);
-    tank2.setEnemy(tank);
-    tank3.setEnemy(tank);
+    tank.setEnemy(light1);
+    tank.setEnemy(light2);
+    tank.setEnemy(light3);
+    tank.setEnemy(light4);
+    tank2.setEnemy(tank); tank3.setEnemy(tank);
+    light1.setEnemy(tank); light2.setEnemy(tank); light3.setEnemy(tank); light4.setEnemy(tank);
+    light1.setAngle(-90.0f); light2.setAngle(-90.0f); light3.setAngle(-90.0f); light4.setAngle(-90.0f);
 
     Crosshair crosshair; 
     Map map;
@@ -116,8 +131,12 @@ int main(void)
     map.placeBush(9, 9);
     map.placeBush(10, 9);
     PauseMenu pauseMenu(WINDOW_WIDTH, WINDOW_HEIGHT, pauseMenuTextRenderer);
-    Projectile apProjectile(glm::vec2(0.15f, -0.93f), 0.0f, 0.0f, ProjectileType::AP, 2.5f);
-    Projectile heProjectile(glm::vec2(0.55f, -0.93f), 0.0f, 0.0f, ProjectileType::HE, 2.5f);
+    int currentLevel = 1;
+    LevelCompleteMenu levelCompleteMenu(WINDOW_WIDTH, WINDOW_HEIGHT, levelCompleteMenuTextRenderer);
+    
+    Projectile apProjectile(glm::vec2(0.45f, -0.93f), 0.0f, 0.0f, ProjectileType::AP, 2.5f);
+    Projectile heProjectile(glm::vec2(0.75f, -0.93f), 0.0f, 0.0f, ProjectileType::HE, 2.5f);
+    //HealthBar healthBar;
 
     ISoundEngine* SoundEngine = createIrrKlangDevice(); 
     SoundEngine->setSoundVolume(0.15f);
@@ -129,6 +148,7 @@ int main(void)
     float deltaTime = 0.0f;
     bool APSelected = true;
     bool HESelected = false;
+    setupLevel(currentLevel, tank, tank2, tank3, light1, light2, light3, light4, map);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -153,54 +173,60 @@ int main(void)
 
             map.render();
             std::vector<Tank*> enemyTanks = { &tank2, &tank3 };
-
+            if (currentLevel == 2) {
+                if (!tank2.isDestroyed) tank2.render(deltaTime, map, *SoundEngine);
+                if (!tank2.isDestroyed) turret2.render();
+                if (!tank3.isDestroyed) tank3.render(deltaTime, map, *SoundEngine);
+                if (!tank3.isDestroyed) turret3.render();
+            }
             if (!tank.isDestroyed) tank.render(deltaTime, map, *SoundEngine);
             if (!tank.isDestroyed) turret.render();
-            if (!tank2.isDestroyed) tank2.render(deltaTime, map, *SoundEngine);
-            if (!tank2.isDestroyed) turret2.render();
-            if (!tank3.isDestroyed) tank3.render(deltaTime, map, *SoundEngine);
-            if (!tank3.isDestroyed) turret3.render();
+            light1.render(deltaTime, map, *SoundEngine);
+            light2.render(deltaTime, map, *SoundEngine);
+            light3.render(deltaTime, map, *SoundEngine);
+            light4.render(deltaTime, map, *SoundEngine);
             crosshair.render(tank, currentTime);
             apProjectile.render();
             heProjectile.render();
-            tank2.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
+            //tank2.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
+            light1.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
+            light2.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
+            light3.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
+            light4.performAITasks(tank.position, currentTime, deltaTime, map, WINDOW_WIDTH, WINDOW_HEIGHT, *SoundEngine);
+
             TextRendering(textRenderingShader, tank, mainTextRenderer, elapsedGameTime, isGameWon);
             pauseMenu.renderOverlay(textRenderingShader, mouseX, mouseY);
-            /*for (auto* projectile : tank.projectiles) {
-                projectile->update(deltaTime, map);
-                CheckProjectileTankHit(*SoundEngine, tank2, *projectile);
-                CheckProjectileTankHit(*SoundEngine, tank3, *projectile);
-                projectile->render();
-            }
-            for (auto it = tank.projectiles.begin(); it != tank.projectiles.end();) {
-                if ((*it)->hasHitTarget() || !(*it)->isActive()) {
-                    glm::vec2 explosionPos = (*it)->getPosition();
-                    tank.explosions.push_back(((*it)->type == ProjectileType::AP) ? 
-                                                new Explosion(explosionPos, FRAME_TIME, "dust.png") : 
-                                                new Explosion(explosionPos, FRAME_TIME, "explosion.png"));
-                    SoundEngine->play2D("explosion.mp3", false);
-                    delete* it;
-                    it = tank.projectiles.erase(it);
-                }
-                else {
-                    ++it;
-                }
-            }
-            for (auto* explosion : tank.explosions) {
-                explosion->update(deltaTime);
-                explosion->render();
-            }
-            for (auto it = tank.explosions.begin(); it != tank.explosions.end();) {
-                if ((*it)->isFinished()) {
-                    delete* it;
-                    it = tank.explosions.erase(it);
-                }
-                else {
-                    ++it;
-                }
-            }*/
 
             processInput(window, *SoundEngine, tank, crosshair, turret, map, pauseMenu, deltaTime);
+
+            // Check for level completion
+            if (currentLevel == 1 && light1.isDestroyed && light2.isDestroyed && 
+                light3.isDestroyed && light4.isDestroyed) {
+                levelCompleteMenu.show(false); // Show "Level Complete" message
+            }
+            else if (currentLevel == 2 && tank2.isDestroyed && tank3.isDestroyed &&
+                light1.isDestroyed && light2.isDestroyed &&
+                light3.isDestroyed && light4.isDestroyed) {
+                levelCompleteMenu.show(true); // Show "Game Complete" message
+            }
+
+            // Handle level complete menu
+            if (levelCompleteMenu.isShown()) {
+                double mouseX, mouseY;
+                glfwGetCursorPos(window, &mouseX, &mouseY);
+
+                if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+                    if (levelCompleteMenu.handleNextLevelClick(mouseX, mouseY)) {
+                        currentLevel++;
+                        setupLevel(currentLevel, tank, tank2, tank3, light1, light2, light3, light4, map);
+                        levelCompleteMenu.hide();
+                        gameStartTime = glfwGetTime(); // Reset timer for new level
+                    }
+                }
+            }
+
+            // Your existing rendering code...
+            levelCompleteMenu.renderOverlay(textRenderingShader, mouseX, mouseY);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -208,20 +234,9 @@ int main(void)
     }
 
     SoundEngine->drop();
-    //tank.explosions.clear();
-    //tank.projectiles.clear();
     glfwTerminate();
     return 0;
 }
-
-//void CheckProjectileTankHit(ISoundEngine& SoundEngine, Tank& tank, Projectile& projectile) {
-//    float distance = glm::distance(projectile.getPosition(), tank.position); //euklidska distanca izmedju projektila i tenka
-//    if (distance < 0.1f) {
-//        tank.isDestroyed = true;
-//        projectile.hitTarget = true;
-//        projectile.active = false;
-//    }
-//}
 
 void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& textRenderer, float elapsedGameTime, bool isGameWon) {
     float currentTime = glfwGetTime();
@@ -253,8 +268,8 @@ void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& t
         heText = "";
     }
 
-    textRenderer.renderText(textRenderingShader, apText + std::to_string(tank.ammunitionAP) + apText, 1.2f, 0.05f, 0.8f, apColor);
-    textRenderer.renderText(textRenderingShader, heText + std::to_string(tank.ammunitionHE) + heText, 1.6f, 0.05f, 0.8f, heColor);
+    textRenderer.renderText(textRenderingShader, apText + std::to_string(tank.ammunitionAP) + apText, 1.5f, 0.05f, 0.8f, apColor);
+    textRenderer.renderText(textRenderingShader, heText + std::to_string(tank.ammunitionHE) + heText, 1.8f, 0.05f, 0.8f, heColor);
 
     std::ostringstream timeStream;
     timeStream << "Time left: " << std::fixed << std::setprecision(2) << (GAME_TIME - elapsedGameTime) << "s";
@@ -264,6 +279,61 @@ void TextRendering(unsigned int textRenderingShader, Tank& tank, TextRenderer& t
         textRenderer.renderText(textRenderingShader, ((GAME_TIME - elapsedGameTime) <= 0.0) ? "YOU LOST!" : timeStream.str() ,
         0.02f, 1.92f, 0.8f, ((GAME_TIME - elapsedGameTime) <= 0.0) ? glm::vec3(0.8, 0.0f, 0.0f) : glm::vec3(0.8, 0.0f, 0.0f));
 
+}
+
+void setupLevel(int level, Tank& tank, Tank& tank2, Tank& tank3,
+    Tank& light1, Tank& light2, Tank& light3, Tank& light4, Map& map) {
+    // Reset tank positions and health
+    tank.reset(glm::vec2(0.0f, -0.7f), 0.0f);
+
+    if (level == 1) {
+        // Remove light tanks for level 1
+        light1.reset(glm::vec2(0.6f, 0.4f), 0.0f); // Move off screen
+        light2.reset(glm::vec2(-0.6f, 0.4f), 0.0f);
+        light3.reset(glm::vec2(0.15f, 0.7f), 0.0f);
+        light4.reset(glm::vec2(-0.15f, 0.7f), 0.0f);
+
+        light1.setAngle(-90.0f); light2.setAngle(-90.0f); light3.setAngle(0.0f); light4.setAngle(180.0f);
+    }
+    else if (level == 2) {
+        // Level 2 setup - moving targets and light tanks
+        tank2.reset(glm::vec2(-0.7f, 0.7f), 180.0f);
+        tank3.reset(glm::vec2(0.7f, 0.7f), 180.0f);
+
+        // Add light tanks
+        light1.reset(glm::vec2(0.5f, 0.4f), 0.0f);
+        light2.reset(glm::vec2(0.7f, 0.4f), 0.0f);
+        light3.reset(glm::vec2(-0.5f, 0.4f), 0.0f);
+        light4.reset(glm::vec2(-0.7f, 0.4f), 0.0f);
+
+        tank2.setAngle(-90.0f); tank3.setAngle(-90.0f);
+        light1.setAngle(-90.0f); light2.setAngle(-90.0f); light3.setAngle(-90.0f); light4.setAngle(-90.0f);
+    }
+
+    // Reset map for new level
+    map.clearAll();
+    if (level == 1) {
+        // Level 1 map setup
+        map.setTile(5, 4, TileType::WALL); map.setTile(6, 4, TileType::WALL); map.setTile(7, 4, TileType::WALL);
+        map.setTile(8, 4, TileType::WALL); map.setTile(9, 4, TileType::WALL);
+        map.setTile(5, 10, TileType::WALL); map.setTile(6, 10, TileType::WALL); map.setTile(7, 10, TileType::WALL);
+        map.setTile(8, 10, TileType::WALL); map.setTile(9, 10, TileType::WALL);
+        map.placeBush(4, 5);  map.placeBush(5, 5); map.placeBush(6, 5); map.placeBush(7, 5);
+        map.placeBush(8, 5); map.placeBush(9, 5); map.placeBush(10, 5);
+        map.placeBush(4, 9); map.placeBush(5, 9); map.placeBush(6, 9); map.placeBush(7, 9);
+        map.placeBush(8, 9); map.placeBush(9, 9); map.placeBush(10, 9);
+    }
+    else if (level == 2) {
+        // Level 2 map setup - more complex
+        map.setTile(5, 4, TileType::WALL); map.setTile(6, 4, TileType::WALL); map.setTile(7, 4, TileType::WALL);
+        map.setTile(8, 4, TileType::WALL); map.setTile(9, 4, TileType::WALL);
+        map.setTile(5, 10, TileType::WALL); map.setTile(6, 10, TileType::WALL); map.setTile(7, 10, TileType::WALL);
+        map.setTile(8, 10, TileType::WALL); map.setTile(9, 10, TileType::WALL);
+        map.placeBush(4, 5);  map.placeBush(5, 5); map.placeBush(6, 5); map.placeBush(7, 5);
+        map.placeBush(8, 5); map.placeBush(9, 5); map.placeBush(10, 5);
+        map.placeBush(4, 9); map.placeBush(5, 9); map.placeBush(6, 9); map.placeBush(7, 9);
+        map.placeBush(8, 9); map.placeBush(9, 9); map.placeBush(10, 9);
+    }
 }
 void processInput(GLFWwindow* window, ISoundEngine& SoundEngine, Tank& tank, Crosshair& crosshair, Turret& turret, Map& map,
                   PauseMenu& pauseMenu, float deltaTime) {
